@@ -1,3 +1,6 @@
-# Copy this file to links.txt and replace the example with your Confluence URLs.
-# links.txt is intentionally excluded from Git. One URL per line.
+# Скопируйте файл в links.txt и замените пример ссылками на ваши статьи Confluence.
+# Откройте статью в браузере, нажмите Ctrl+L, Ctrl+C и вставьте адрес сюда.
+# Одна полная HTTPS-ссылка на строку. Все статьи — на одном сервере.
+# Нужен числовой ID после /pages/ или в параметре pageId. Короткие /x/ не подходят.
+# links.txt исключён из Git. Подробная инструкция — docs/FIXED_REPORTS.md.
 https://your-company.atlassian.net/wiki/spaces/EXAMPLE/pages/123456789/Example

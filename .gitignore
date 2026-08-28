@@ -3,7 +3,12 @@
 /*
 !/.gitignore
 !/.gitattributes
+!/README.md
+!/AGENT_GUIDE.md
 !/README_LOCAL.md
+!/agent_export.py
+!/connection_window.py
+!/CONFLUENCE_AGENT.bat
 !/links.example.txt
 !/fetch_pages.py
 !/local_export.py
@@ -23,5 +28,10 @@
 !/tests/
 /tests/*
 !/tests/test_local_export.py
+!/tests/test_agent_export.py
+
+!/docs/
+/docs/*
+!/docs/FIXED_REPORTS.md
 
 # Includes links.txt, JSON/XLSX/DOCX, logs, .env, _qa and node_modules.
