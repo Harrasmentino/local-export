@@ -1,0 +1,27 @@
+# Deny by default: this folder also contains confidential source exports.
+# Add new source files explicitly; never allow raw data or credentials here.
+/*
+!/.gitignore
+!/.gitattributes
+!/README_LOCAL.md
+!/links.example.txt
+!/fetch_pages.py
+!/local_export.py
+!/local_documents.py
+!/windows_credentials.py
+!/parser.py
+!/extract_expands.py
+!/VYGRUZKA.bat
+!/run.bat
+!/ZAPUSK.bat
+
+!/_local/
+/_local/*
+!/_local/export_xlsx.mjs
+!/_local/network_off.mjs
+
+!/tests/
+/tests/*
+!/tests/test_local_export.py
+
+# Includes links.txt, JSON/XLSX/DOCX, logs, .env, _qa and node_modules.

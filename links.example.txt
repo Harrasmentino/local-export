@@ -1,0 +1,3 @@
+# Copy this file to links.txt and replace the example with your Confluence URLs.
+# links.txt is intentionally excluded from Git. One URL per line.
+https://your-company.atlassian.net/wiki/spaces/EXAMPLE/pages/123456789/Example
