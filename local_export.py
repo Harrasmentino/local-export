@@ -12,8 +12,9 @@ import uuid
 from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
+from platform_paths import app_data_dir
 
-from windows_credentials import CredentialStoreError
+from credential_store import CredentialStoreError
 
 ROOT = Path(__file__).resolve().parent
 TOPICS = {
@@ -281,7 +282,7 @@ def write_reports(payload: dict, folder: Path) -> None:
     node, modules = runtime_paths()
     junction = ROOT / '_local/node_modules'
     if not junction.exists() or junction.resolve() != modules.resolve():
-        raise ExportError('Нет корректной локальной ссылки на библиотеки. Запустите VYGRUZKA.bat.')
+        raise ExportError('Нет корректной локальной ссылки на библиотеки. Запусти системный VYGRUZKA launcher.')
     source = folder / 'report_data.json'
     source.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
     env = {k: v for k, v in os.environ.items() if not any(s in k.upper() for s in
@@ -309,7 +310,7 @@ def main() -> int:
     folder = None
     try:
         runtime_paths()
-        parent = args.output_dir or Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'ConfluenceLocalExport/exports'
+        parent = args.output_dir or app_data_dir() / 'exports'
         folder = parent.resolve() / (datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '_' + uuid.uuid4().hex[:6])
         folder.mkdir(parents=True, exist_ok=False)
         (folder / 'INCOMPLETE.txt').write_text('Сборка не завершена. Не использовать как готовый отчёт.', encoding='utf-8')

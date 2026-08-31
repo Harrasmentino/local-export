@@ -16,7 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPSHandler, HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
-from windows_credentials import load_credentials, save_credentials
+from credential_store import credential_store_label, load_credentials, save_credentials
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -173,7 +173,7 @@ def credentials(base_url: str, *, force_prompt: bool = False, email_hint: str = 
     if not force_prompt:
         stored = load_credentials(base_url)
         if stored:
-            print('Используются сохранённые доступы Windows.')
+            print('Используются сохранённые доступы из ' + credential_store_label() + '.')
             return stored
         email = os.environ.get('CONF_EMAIL', '')
         token = os.environ.get('CONF_TOKEN', '')
@@ -189,7 +189,7 @@ def credentials(base_url: str, *, force_prompt: bool = False, email_hint: str = 
                 warnings.simplefilter('error', getpass.GetPassWarning)
                 token = getpass.getpass('API-токен (ввод скрыт; пустой ввод — отмена): ')
         except getpass.GetPassWarning:
-            raise ValueError('Не удалось включить скрытый ввод. Запустите VYGRUZKA.bat в обычном окне Windows.') from None
+            raise ValueError('Не удалось включить скрытый ввод. Запусти программу в обычном локальном терминале.') from None
     if not email or not token:
         raise ValueError('Ввод доступов отменён.')
     return email, token
@@ -216,10 +216,10 @@ def download_authenticated(links_path: Path, output: Path, *, update_credentials
             print('Новые доступы тоже отклонены. Повтор остановлен; сохранённая запись не изменена.')
         elif any(p.get('error') == 'HTTP 403' for p in pages):
             print('Доступ к странице запрещён (403). Проверьте права; автоматической замены токена нет.')
-            print('Для ручной замены запустите VYGRUZKA.bat --update-credentials.')
+            print('Для ручной замены запусти загрузчик с --update-credentials.')
         if pages and all('error' not in p and p.get('fetched_at') for p in pages):
             save_credentials(base, email, token)
-            print('Доступы сохранены в Windows Credential Manager для следующих запусков.')
+            print('Доступы сохранены в ' + credential_store_label() + ' для следующих запусков.')
         return pages
     raise RuntimeError('Unreachable authentication state')
 

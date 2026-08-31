@@ -11,13 +11,14 @@ import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from platform_paths import app_data_dir
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urlsplit, urljoin
 from urllib.request import HTTPSHandler, ProxyHandler, Request, build_opener
 
 from connection_window import show_connection
 from fetch_pages import NoRedirect, download, origin
-from windows_credentials import CredentialStoreError, load_credentials, save_credentials
+from credential_store import CredentialStoreError, load_credentials, save_credentials
 
 
 class AgentExportError(Exception):
@@ -50,7 +51,7 @@ def read_connection(path: Path) -> dict | None:
         data = json.loads(path.read_text(encoding='utf-8'))
         return parse_source(data['database_url'])
     except (ValueError, KeyError, TypeError):
-        raise AgentExportError('Настройка источника повреждена. Запусти CONFLUENCE_AGENT.bat --configure.') from None
+        raise AgentExportError('Настройка источника повреждена. Запусти загрузчик с --configure.') from None
 
 
 def write_json(path: Path, data) -> None:
@@ -242,7 +243,7 @@ def main(argv=None) -> int:
     parser.add_argument('--update-credentials', action='store_true', help='Открыть окно замены токена.')
     parser.add_argument('--output-dir', type=Path, help='Родительская папка результатов.')
     args = parser.parse_args(argv)
-    private = Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'ConfluenceLocalExport'
+    private = app_data_dir()
     parent = args.output_dir or private / 'agent_exports'
     folder = parent.resolve() / (datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '_' + uuid.uuid4().hex[:8])
     try:
@@ -252,7 +253,7 @@ def main(argv=None) -> int:
     except (AgentExportError, CredentialStoreError) as error:
         print('Ошибка: ' + str(error), flush=True)
     except (OSError, ValueError, TypeError, KeyError, ImportError, RuntimeError):
-        print('Не удалось выполнить локальную выгрузку. Проверь доступ к окну Windows, файлам и библиотекам.', flush=True)
+        print('Не удалось выполнить локальную выгрузку. Проверь доступ к локальному окну, файлам и библиотекам.', flush=True)
     except KeyboardInterrupt:
         print('Выгрузка остановлена.', flush=True)
     if folder.exists():

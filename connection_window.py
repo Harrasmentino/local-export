@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from windows_credentials import MAX_BLOB_BYTES
+from credential_store import MAX_BLOB_BYTES, credential_store_label
 
 
 @dataclass
@@ -12,6 +12,26 @@ class ConnectionInput:
     email: str
     token: str = field(repr=False)
 
+
+# Windows Tk resolves Ctrl shortcuts through the active layout. Physical V, for
+# example, becomes Cyrillic М and the default <<Paste>> binding is skipped.
+_WINDOWS_EDIT_KEYS = {
+    65: '<<SelectAll>>',
+    67: '<<Copy>>',
+    86: '<<Paste>>',
+    88: '<<Cut>>',
+}
+
+
+def handle_edit_shortcut(event, entries):
+    """Dispatch Windows editing shortcuts by virtual key, independent of layout."""
+    if not event.state & 0x0004 or event.widget not in entries:
+        return None
+    action = _WINDOWS_EDIT_KEYS.get(event.keycode)
+    if action is None:
+        return None
+    event.widget.event_generate(action)
+    return 'break'
 
 class ConnectionWindow:
     def __init__(self, root, *, validate_source, database_url='', email_hint='',
@@ -58,10 +78,12 @@ class ConnectionWindow:
                               show='*' if variable is self.token else '')
             entry.grid(sticky='ew', pady=(0, 16), ipady=4)
             self.entries.append(entry)
+            entry.bind('<Control-KeyPress>',
+                       lambda event: handle_edit_shortcut(event, self.entries), add='+')
         if lock_source:
             self.entries[0].configure(state='readonly')
 
-        ttk.Label(panel, text='Доступы сохранятся в хранилище Windows после успешной загрузки.\n'
+        ttk.Label(panel, text=f'Доступы сохранятся в {credential_store_label()} после успешной загрузки.\n'
                   'Тексты карточек будут подготовлены для анализа ИИ.',
                   wraplength=555, style='Connection.TLabel').grid(sticky='w', pady=(0, 8))
         ttk.Label(panel, textvariable=self.error, wraplength=555,
@@ -117,7 +139,7 @@ def show_connection(**kwargs) -> ConnectionInput | None:
     except (ImportError, RuntimeError):
         raise RuntimeError('Не удалось открыть локальное окно подключения. Нужен Python с Tkinter.') from None
     except Exception:
-        raise RuntimeError('Не удалось открыть локальное окно Windows. Запусти программу на своём компьютере.') from None
+        raise RuntimeError('Не удалось открыть локальное окно. Запусти программу на своём компьютере.') from None
     try:
         form = ConnectionWindow(root, **kwargs)
         root.mainloop()

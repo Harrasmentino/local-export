@@ -9,6 +9,12 @@
 !/agent_export.py
 !/connection_window.py
 !/CONFLUENCE_AGENT.bat
+!/CONFLUENCE_AGENT.sh
+!/VYGRUZKA.sh
+!/credential_common.py
+!/credential_store.py
+!/macos_credentials.py
+!/platform_paths.py
 !/links.example.txt
 !/fetch_pages.py
 !/local_export.py
@@ -29,6 +35,7 @@
 /tests/*
 !/tests/test_local_export.py
 !/tests/test_agent_export.py
+!/tests/test_platform_support.py
 
 !/docs/
 /docs/*

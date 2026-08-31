@@ -9,18 +9,11 @@ from __future__ import annotations
 import ctypes
 from ctypes import wintypes
 import os
-from urllib.parse import urlsplit
+from credential_common import CredentialStoreError, MAX_BLOB_BYTES, target_name, validate_credentials
 
 CRED_TYPE_GENERIC = 1
 CRED_PERSIST_LOCAL_MACHINE = 2
 ERROR_NOT_FOUND = 1168
-MAX_BLOB_BYTES = 2560
-
-
-class CredentialStoreError(OSError):
-    """Messages deliberately contain neither target, username nor secret."""
-
-
 class CREDENTIALW(ctypes.Structure):
     _fields_ = [
         ('Flags', wintypes.DWORD), ('Type', wintypes.DWORD),
@@ -31,13 +24,6 @@ class CREDENTIALW(ctypes.Structure):
         ('TargetAlias', wintypes.LPWSTR), ('UserName', wintypes.LPWSTR),
     ]
 
-
-def target_name(base_url: str) -> str:
-    parsed = urlsplit(base_url)
-    if (parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password
-            or parsed.port not in (None, 443) or parsed.path not in ('', '/') or parsed.query or parsed.fragment):
-        raise CredentialStoreError('Некорректный адрес для хранилища доступов.')
-    return 'ConfluenceLocalExport:https://' + parsed.hostname.lower()
 
 
 def _api():
@@ -82,9 +68,8 @@ def load_credentials(base_url: str) -> tuple[str, str] | None:
 
 def save_credentials(base_url: str, email: str, token: str) -> None:
     target = target_name(base_url)
-    encoded = token.encode('utf-8')
-    if not email or '\x00' in email or len(email.encode('utf-16-le')) // 2 > 513 or not 0 < len(encoded) <= MAX_BLOB_BYTES:
-        raise CredentialStoreError('Доступы пусты или превышают лимит хранилища Windows; запись не изменена.')
+    encoded = validate_credentials(email, token)
+
     buffer = ctypes.create_string_buffer(encoded)
     entry = CREDENTIALW()
     entry.Type, entry.TargetName = CRED_TYPE_GENERIC, target

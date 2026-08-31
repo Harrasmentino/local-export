@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlsplit
 
 import agent_export as agent
-from connection_window import ConnectionInput
+from connection_window import ConnectionInput, handle_edit_shortcut
 
 DATABASE = 'https://example.invalid/wiki/spaces/TEST/database/42'
 SOURCE = {'database_url': DATABASE, 'base_url': 'https://example.invalid', 'database_id': '42'}
@@ -88,6 +88,24 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(opener.open.call_count, 3)
         self.assertEqual([c.args[0] for c in sleep.call_args_list], [60, 60])
 
+
+class ShortcutTests(unittest.TestCase):
+    def test_ctrl_edit_shortcuts_use_physical_windows_keys(self):
+        """Ctrl+V must paste even when the active layout turns that key into Cyrillic М."""
+        expected = {65: '<<SelectAll>>', 67: '<<Copy>>', 86: '<<Paste>>', 88: '<<Cut>>'}
+        for keycode, action in expected.items():
+            with self.subTest(keycode=keycode):
+                widget = Mock()
+                event = Mock(state=0x0004, keycode=keycode, widget=widget)
+                self.assertEqual(handle_edit_shortcut(event, (widget,)), 'break')
+                widget.event_generate.assert_called_once_with(action)
+
+    def test_shortcut_handler_ignores_other_keys_and_widgets(self):
+        widget, outsider = Mock(), Mock()
+        self.assertIsNone(handle_edit_shortcut(Mock(state=0, keycode=86, widget=widget), (widget,)))
+        self.assertIsNone(handle_edit_shortcut(Mock(state=0x0004, keycode=86, widget=outsider), (widget,)))
+        widget.event_generate.assert_not_called()
+        outsider.event_generate.assert_not_called()
 
 class LocalAgentFlowTests(unittest.TestCase):
     def setUp(self):
